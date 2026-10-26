@@ -1,4 +1,4 @@
-# InvoiceIQ 🧾
+# InvoiceIQ 
 
 **Document AI that reads receipts and invoices into structured data, checks every number, and
 sends anything that does not add up to a human.**
