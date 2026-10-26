@@ -1,0 +1,8 @@
+[server]
+maxUploadSize = 10  # MB per file
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#2a78d6"

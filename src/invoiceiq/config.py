@@ -34,6 +34,9 @@ class Settings:
     tolerance: float = 0.005  # relative tolerance of the arithmetic checks
     data_dir: str = "data"  # downloaded benchmark data and the OCR cache
     results_dir: str = "results"  # benchmark predictions and metrics
+    # Public demo only: live Gemini runs allowed per visitor session and per day (0 = no limit)
+    demo_session_limit: int = 0
+    demo_daily_limit: int = 0
 
     @property
     def fallback_models(self) -> list[str]:

@@ -1,0 +1,2 @@
+# Streamlit Community Cloud installs the web app from this file.
+-e .[app]

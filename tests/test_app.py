@@ -24,6 +24,19 @@ def test_benchmark_chart_highlights_gemini():
         assert spec["facet"]["field"] == "metric"
 
 
+def test_the_demo_replays_saved_gemini_results_without_a_key(monkeypatch):
+    testing = pytest.importorskip("streamlit.testing.v1")
+    monkeypatch.setattr("invoiceiq.config.load_dotenv", lambda: None)  # no key from a local .env
+    for name in ("GEMINI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    app = testing.AppTest.from_file("../app.py", default_timeout=120)
+    app.run()
+    app.button[0].click().run()  # Gemini is the default reader
+    assert not app.exception and not app.error
+    assert app.metric[0].value == "3"
+    assert any("saved from an earlier run" in caption.value for caption in app.caption)
+
+
 def test_app_reads_the_sample_receipts_with_the_local_reader():
     testing = pytest.importorskip("streamlit.testing.v1")
     app = testing.AppTest.from_file("../app.py", default_timeout=300)

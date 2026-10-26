@@ -7,6 +7,7 @@ correct anything that is flagged, and export everything to Excel or JSON.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 from pathlib import Path
 
 import pandas as pd
@@ -15,11 +16,13 @@ import streamlit as st
 from invoiceiq import bench
 from invoiceiq.charts import TOKENS, benchmark_chart, benchmark_frame, style
 from invoiceiq.config import Settings
+from invoiceiq.demo import DailyQuota, load_samples, replay
 from invoiceiq.documents import SUFFIXES, Document, DocumentError
 from invoiceiq.export import to_excel, to_json
 from invoiceiq.extractors import ExtractionError
 from invoiceiq.pipeline import Pipeline, Result
 from invoiceiq.schema import LineItem, Receipt
+from invoiceiq.validation import validate
 
 st.set_page_config(page_title="InvoiceIQ", page_icon="🧾", layout="wide")
 SETTINGS = Settings.from_env()
@@ -29,6 +32,13 @@ READERS = {
     "Donut, fine-tuned on CORD (local)": "donut",
     "OCR + rules (local)": "ocr-rules",
 }
+if importlib.util.find_spec("torch") is None:  # Donut needs PyTorch, which hosted demos skip
+    del READERS["Donut, fine-tuned on CORD (local)"]
+SAVED = load_samples(EXAMPLES / "samples.json")  # Gemini results for the sample receipts
+LIMIT_MESSAGE = (
+    "This free demo has used its live Gemini requests (per visitor or for today). Add your own "
+    "free Gemini key in the sidebar, switch to the OCR reader, or run InvoiceIQ locally."
+)
 HEADER = {
     "merchant": "Merchant",
     "document_number": "Number",
@@ -42,8 +52,9 @@ AMOUNTS = {
 }  # fmt: skip
 ITEM_COLUMNS = {"name": "Item", "quantity": "Qty", "unit_price": "Unit price", "price": "Amount"}
 STATE = st.session_state
-for name in ("results", "files", "receipts", "reviews", "approved"):
-    STATE.setdefault(name, set() if name == "approved" else {})
+for name in ("results", "files", "receipts", "reviews", "approved", "replayed"):
+    STATE.setdefault(name, set() if name in ("approved", "replayed") else {})
+STATE.setdefault("live_runs", 0)
 
 
 def tokens() -> dict[str, str]:
@@ -56,23 +67,69 @@ def get_pipeline(reader: str) -> Pipeline:
     return Pipeline.from_settings(SETTINGS, reader)
 
 
-def read_all(files: list[tuple[str, bytes]], reader: str) -> None:
-    """Read every file not read yet with this reader; results stay in the session."""
+@st.cache_resource
+def daily_quota() -> DailyQuota:
+    """Live Gemini runs on the server's key today, shared by every visitor."""
+    return DailyQuota(SETTINGS.demo_daily_limit)
+
+
+def pipeline_for(reader: str, own_key: str | None) -> Pipeline:
+    """The shared pipeline, or one on the visitor's own Gemini key (kept for this session only)."""
+    if reader != "gemini" or not own_key:
+        return get_pipeline(reader)
+    digest = hashlib.sha256(own_key.encode()).hexdigest()
+    if STATE.get("own_key_digest") != digest:
+        STATE.own_pipeline = Pipeline.from_settings(SETTINGS, "gemini", api_key=own_key)
+        STATE.own_key_digest = digest
+    return STATE.own_pipeline
+
+
+def take_live_run() -> bool:
+    """Count a live Gemini run against the demo limits; False when none are left."""
+    limit = SETTINGS.demo_session_limit
+    if limit and STATE.live_runs >= limit:
+        return False
+    if not daily_quota().take():
+        return False
+    STATE.live_runs += 1
+    return True
+
+
+def read_all(files: list[tuple[str, bytes]], reader: str, own_key: str | None = None) -> None:
+    """Read every file not read yet with this reader; results stay in the session.
+
+    With Gemini, the sample receipts replay saved results, so the demo spends no quota on them.
+    """
     todo = []
     for name, data in files:
         key = f"{reader}:{hashlib.sha1(data).hexdigest()[:12]}:{name}"
         STATE.files[key] = data
-        if key not in STATE.results:
-            todo.append((key, name, data))
+        if key in STATE.results:
+            continue
+        example = EXAMPLES / name
+        if (
+            reader == "gemini"
+            and name in SAVED
+            and example.is_file()
+            and example.read_bytes() == data
+        ):
+            STATE.results[key] = replay(name, SAVED[name], SETTINGS.tolerance)
+            STATE.replayed.add(key)
+            continue
+        todo.append((key, name, data))
     if not todo:
         return
     try:
-        pipe = get_pipeline(reader)
+        pipe = pipeline_for(reader, own_key)
     except ExtractionError as exc:
         st.error(str(exc))
         return
+    limited = reader == "gemini" and not own_key
     progress = st.progress(0.0, text="Reading...")
     for position, (key, name, data) in enumerate(todo, 1):
+        if limited and not take_live_run():
+            st.warning(LIMIT_MESSAGE)
+            break
         progress.progress(
             (position - 1) / len(todo), text=f"Reading {name} ({position}/{len(todo)})..."
         )
@@ -148,7 +205,13 @@ def review_panel(key: str) -> None:
         for check in review.checks:
             icon = {"pass": "✅", "fail": "⚠️", "skip": "➖"}[check.status]
             st.markdown(f"{icon} **{check.name}**: {check.detail}")
-        st.caption(f"Read by {result.model} in {result.seconds:.1f} s.")
+        if key in STATE.replayed:
+            st.caption(
+                f"Read by {result.model} in {result.seconds:.1f} s, saved from an earlier run and "
+                "replayed so the demo spends no API quota; the checks run live."
+            )
+        else:
+            st.caption(f"Read by {result.model} in {result.seconds:.1f} s.")
 
         receipt = result.receipt
         with st.form(f"form-{widget}", border=False):
@@ -194,9 +257,7 @@ def review_panel(key: str) -> None:
         if rechecked or approved:
             corrected = corrected_receipt(receipt, values, edited)
             STATE.receipts[key] = corrected
-            STATE.reviews[key] = get_pipeline(key.split(":", 1)[0]).review(
-                corrected, result.ocr_text
-            )
+            STATE.reviews[key] = validate(corrected, result.ocr_text, SETTINGS.tolerance)
             STATE.versions[key] = version + 1
             if approved:
                 STATE.approved.add(key)
@@ -296,13 +357,27 @@ with st.sidebar:
     reader = READERS[reader_name]
     st.caption(
         {
-            "gemini": "Gemini reads the page straight into the schema. Free tier: set "
-            "GEMINI_API_KEY in .env.",
+            "gemini": "Gemini reads the page straight into the schema, on the free tier.",
             "donut": "A 2022 model trained on CORD receipts. Runs on your CPU; needs "
             '`pip install -e ".[donut]"`.',
             "ocr-rules": "The classic approach: OCR, then keyword rules. Runs on your CPU.",
         }[reader]
     )
+    own_key = None
+    if reader == "gemini":
+        key_help = (
+            "Runs on your own free quota, without the demo limits. It is used only in this "
+            "session and never stored. Free keys: https://aistudio.google.com/apikey"
+        )
+        own_key = (
+            st.text_input("Your Gemini API key (optional)", type="password", help=key_help).strip()
+            or None
+        )
+        if SETTINGS.demo_session_limit and not own_key:
+            st.caption(
+                "The sample receipts replay saved Gemini results. Live uploads in this demo: "
+                f"{SETTINGS.demo_session_limit} per visitor."
+            )
 
 read_tab, benchmark = st.tabs(["Read documents", "Benchmark"])
 with read_tab:
@@ -319,7 +394,7 @@ with read_tab:
     files = [(upload.name, upload.getvalue()) for upload in uploads or []]
     if STATE.get("use_samples"):
         files += [(path.name, path.read_bytes()) for path in samples]
-    read_all(files, reader)
+    read_all(files, reader, own_key)
     keys = [
         k
         for k in STATE.results

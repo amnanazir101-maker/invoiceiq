@@ -195,6 +195,25 @@ Settings are read from the environment or `.env` (see [`.env.example`](.env.exam
 | `INVOICEIQ_THINKING_LEVEL` | `low` | Gemini 3 thinking level |
 | `INVOICEIQ_CHECK_PRINTED` | `true` | confirm every amount against local OCR of the page |
 | `INVOICEIQ_TOLERANCE` | `0.005` | tolerance of the arithmetic checks, as a share of the bill |
+| `INVOICEIQ_DEMO_SESSION_LIMIT` | `0` | public demo: live Gemini runs per visitor (0 = no limit) |
+| `INVOICEIQ_DEMO_DAILY_LIMIT` | `0` | public demo: live Gemini runs per day for all visitors (0 = no limit) |
+
+### Host a public demo
+
+The web app is ready for [Streamlit Community Cloud](https://streamlit.io/cloud) (free): create
+an app from this repository with `app.py` as the main file and Python 3.12, and add the key and
+the demo limits under **Secrets**:
+
+```toml
+GEMINI_API_KEY = "your-free-key"
+INVOICEIQ_DEMO_SESSION_LIMIT = "3"
+INVOICEIQ_DEMO_DAILY_LIMIT = "50"
+```
+
+The sample receipts replay Gemini's saved results ([`examples/samples.json`](examples/samples.json),
+made by `scripts/make_samples.py`) with the checks run live, so browsing the demo spends no
+quota. Live uploads count against the two limits, and visitors can paste their own free key in
+the sidebar to run without them.
 
 ## Reproduce the benchmark
 
@@ -221,6 +240,7 @@ src/invoiceiq/
   extractors/        gemini.py (structured output, quota-aware), donut.py, ocr_rules.py
   ocr.py             RapidOCR wrapper: line grouping and an optional disk cache
   pipeline.py        extraction and OCR in parallel, then validation
+  demo.py            public demo: saved sample results and a daily request cap
   cord.py            CORD v2 loader and the mapping to and from its labels
   metrics.py         field F1 (Donut protocol), normalized F1, per-receipt metrics
   bench.py           resumable benchmark runner
@@ -240,7 +260,7 @@ tests/               offline test suite (no API key or network)
 pytest -q
 ```
 
-91 tests run in about two minutes without an API key or network access. They cover:
+96 tests run in about a minute without an API key or network access. They cover:
 
 - the amount parser on the formats real receipts use;
 - every business rule, including tax-inclusive prices, discounts, add-ons and rounding;
@@ -249,7 +269,8 @@ pytest -q
   client;
 - the OCR baseline on a rendered receipt with real OCR;
 - the REST API, the Excel export, the resumable benchmark runner, the CLI;
-- the web app, driven headlessly with Streamlit's test harness.
+- the web app, driven headlessly with Streamlit's test harness, including the demo replaying
+  saved results without an API key.
 
 GitHub Actions runs the tests on Python 3.11 and 3.12, checks linting and formatting with
 Ruff, and builds the Docker image.

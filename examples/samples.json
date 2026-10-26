@@ -1,0 +1,118 @@
+{
+  "receipt-add-ons.jpg": {
+    "cord_id": "test-016",
+    "model": "gemini-3.5-flash-lite",
+    "seconds": 2.87,
+    "receipt": {
+      "items": [
+        {
+          "name": "[LG] BLACK SAKURA",
+          "quantity": "1",
+          "price": "59,091",
+          "sub_items": [
+            {
+              "name": "LONGAN",
+              "quantity": "1",
+              "price": "0"
+            },
+            {
+              "name": "ROASTED ALMOND",
+              "quantity": "1",
+              "price": "0"
+            },
+            {
+              "name": "MANGGO",
+              "quantity": "1",
+              "price": "0"
+            }
+          ]
+        },
+        {
+          "name": "MINERAL WATER (bundling) 5k",
+          "quantity": "1",
+          "price": "4,545"
+        }
+      ],
+      "subtotal": "63,636",
+      "other_charges": "0",
+      "tax": "6,364",
+      "total": "70,000",
+      "cash": "100,000",
+      "change": "30,000"
+    },
+    "ocr_text": "1 [LG] BLACK SAKURA 59,091\n1LONGAN 0\n1 ROASTED ALMOND 0\n1 NANGGO 0\n1 VINERAL WATER (bundling) 5k 4,545\nSub Total 63,636\nPB1 (10%) 6,364\nRounding 0\nTotal 70,000\nCash Payment 100,000\nChange 30,000"
+  },
+  "receipt-faded.jpg": {
+    "cord_id": "test-020",
+    "model": "gemini-3.5-flash-lite",
+    "seconds": 3.21,
+    "receipt": {
+      "items": [
+        {
+          "name": "cashew nuts chkn",
+          "quantity": "1",
+          "price": "64,500"
+        },
+        {
+          "name": "garlic pepper beef",
+          "quantity": "1",
+          "price": "79,500"
+        },
+        {
+          "name": "red curry beef",
+          "quantity": "1",
+          "price": "69,500"
+        },
+        {
+          "name": "phad thai",
+          "quantity": "1",
+          "price": "64,500"
+        },
+        {
+          "name": "steamed rice",
+          "quantity": "4",
+          "price": "47,600"
+        }
+      ],
+      "subtotal": "325,600",
+      "service_charge": "17,908",
+      "tax": "34,351",
+      "total": "377,859"
+    },
+    "ocr_text": "cashew nuts chkn\ngarlic pepper beef 9\nred curry beef 9\nphad thai 64.500\n4 steamed rice 600\nSUVBTAL\nService chrg 908\n10% 34\nTOTAL"
+  },
+  "receipt-two-line-items.jpg": {
+    "cord_id": "test-026",
+    "model": "gemini-3.5-flash-lite",
+    "seconds": 2.93,
+    "receipt": {
+      "date": "14 May 2019",
+      "currency": "Rp",
+      "items": [
+        {
+          "name": "Nasi Cap Cay Porsi B",
+          "quantity": "1",
+          "unit_price": "65.000",
+          "price": "65.000"
+        },
+        {
+          "name": "Teh Tawar",
+          "quantity": "2",
+          "unit_price": "4.000",
+          "price": "8.000"
+        },
+        {
+          "name": "Fu Yung Hai",
+          "quantity": "1",
+          "unit_price": "65.000",
+          "price": "65.000"
+        }
+      ],
+      "subtotal": "Rp 138.000",
+      "total": "Rp 138.000",
+      "cash": "Rp 138.000",
+      "change": "Rp 0"
+    },
+    "ocr_text": "HAAMI BANLRA\nCap Cay\nNasi Cap Cay Porsi B\nesar\n65.000 65.000\nMinuman\nTeh Tawar\n4.000 2.000\nLain-lain\nFu Yung Hai 65.000\n65.000\nSubtotal Rp 138.000\nTotal Rp 138.000\nCash Rp 138.000\nChange Rp 0"
+  }
+}

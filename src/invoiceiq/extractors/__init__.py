@@ -21,6 +21,7 @@ def make_extractor(
     ocr: OcrEngine | None = None,
     model: str | None = None,
     fallback: bool = True,
+    api_key: str | None = None,
 ) -> Extractor:
     if name == "gemini":
         from invoiceiq.extractors.gemini import GeminiExtractor
@@ -29,6 +30,7 @@ def make_extractor(
             model or settings.gemini_model,
             fallback_models=settings.fallback_models if fallback else (),
             thinking_level=settings.thinking_level,
+            api_key=api_key,
         )
     if name == "donut":
         from invoiceiq.extractors.donut import DonutExtractor
