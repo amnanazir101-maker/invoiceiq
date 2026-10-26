@@ -1,0 +1,168 @@
+{
+  "file": "receipt-add-ons.jpg",
+  "status": "approved",
+  "receipt": {
+    "merchant": null,
+    "document_number": null,
+    "date": null,
+    "currency": null,
+    "items": [
+      {
+        "name": "[LG] BLACK SAKURA",
+        "code": null,
+        "quantity": "1",
+        "unit_price": null,
+        "discount": null,
+        "price": "59,091",
+        "sub_items": [
+          {
+            "name": "LONGAN",
+            "quantity": "1",
+            "unit_price": null,
+            "price": "0"
+          },
+          {
+            "name": "ROASTED ALMOND",
+            "quantity": "1",
+            "unit_price": null,
+            "price": "0"
+          },
+          {
+            "name": "MANGGO",
+            "quantity": "1",
+            "unit_price": null,
+            "price": "0"
+          }
+        ]
+      },
+      {
+        "name": "MINERAL WATER (bundling) 5k",
+        "code": null,
+        "quantity": "1",
+        "unit_price": null,
+        "discount": null,
+        "price": "4,545",
+        "sub_items": []
+      }
+    ],
+    "subtotal": "63,636",
+    "discount": null,
+    "service_charge": null,
+    "other_charges": "0",
+    "tax": "6,364",
+    "total": "70,000",
+    "cash": "100,000",
+    "change": "30,000",
+    "card": null,
+    "e_money": null,
+    "item_count": null,
+    "line_count": null
+  },
+  "values": {
+    "merchant": null,
+    "document_number": null,
+    "date": null,
+    "currency": null,
+    "items": [
+      {
+        "name": "[LG] BLACK SAKURA",
+        "code": null,
+        "quantity": 1.0,
+        "unit_price": null,
+        "discount": null,
+        "price": 59091.0,
+        "sub_items": [
+          {
+            "name": "LONGAN",
+            "quantity": 1.0,
+            "unit_price": null,
+            "price": 0.0
+          },
+          {
+            "name": "ROASTED ALMOND",
+            "quantity": 1.0,
+            "unit_price": null,
+            "price": 0.0
+          },
+          {
+            "name": "MANGGO",
+            "quantity": 1.0,
+            "unit_price": null,
+            "price": 0.0
+          }
+        ]
+      },
+      {
+        "name": "MINERAL WATER (bundling) 5k",
+        "code": null,
+        "quantity": 1.0,
+        "unit_price": null,
+        "discount": null,
+        "price": 4545.0,
+        "sub_items": []
+      }
+    ],
+    "subtotal": 63636.0,
+    "discount": null,
+    "service_charge": null,
+    "other_charges": 0.0,
+    "tax": 6364.0,
+    "total": 70000.0,
+    "cash": 100000.0,
+    "change": 30000.0,
+    "card": null,
+    "e_money": null,
+    "item_count": null,
+    "line_count": null
+  },
+  "review": {
+    "status": "approved",
+    "checks": [
+      {
+        "name": "Total found",
+        "status": "pass",
+        "detail": "Total 70,000.",
+        "fields": []
+      },
+      {
+        "name": "Items add up",
+        "status": "pass",
+        "detail": "Items add up to 63,636.",
+        "fields": []
+      },
+      {
+        "name": "Totals add up",
+        "status": "pass",
+        "detail": "Subtotal, charges and discount match the total.",
+        "fields": []
+      },
+      {
+        "name": "Change is right",
+        "status": "pass",
+        "detail": "Cash minus the total is the change.",
+        "fields": []
+      },
+      {
+        "name": "Quantity times price",
+        "status": "skip",
+        "detail": "No item prints a quantity and a unit price.",
+        "fields": []
+      },
+      {
+        "name": "Item count",
+        "status": "skip",
+        "detail": "No item count is printed.",
+        "fields": []
+      },
+      {
+        "name": "Amounts are printed",
+        "status": "pass",
+        "detail": "Every amount appears in the OCR text.",
+        "fields": []
+      }
+    ],
+    "flagged": []
+  },
+  "model": "gemini-3.5-flash-lite",
+  "seconds": 11.18
+}

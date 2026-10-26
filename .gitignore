@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Environments and secrets
+.venv/
+venv/
+.env
+
+# Tools
+.pytest_cache/
+.ruff_cache/
+
+# Downloaded data and caches (recreated by `invoiceiq benchmark`)
+data/
+
+# Development runs on the validation split; the test-split results are kept
+results/*-validation/
