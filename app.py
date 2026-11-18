@@ -24,7 +24,7 @@ from invoiceiq.pipeline import Pipeline, Result
 from invoiceiq.schema import LineItem, Receipt
 from invoiceiq.validation import validate
 
-st.set_page_config(page_title="InvoiceIQ", page_icon="🧾", layout="wide")
+st.set_page_config(page_title="InvoiceIQ", page_icon=":material/receipt_long:", layout="wide")
 SETTINGS = Settings.from_env()
 EXAMPLES = Path(__file__).parent / "examples"
 READERS = {
@@ -51,6 +51,11 @@ AMOUNTS = {
     "change": "Change", "card": "Card", "e_money": "E-money",
 }  # fmt: skip
 ITEM_COLUMNS = {"name": "Item", "quantity": "Qty", "unit_price": "Unit price", "price": "Amount"}
+CHECK_BADGES = {
+    "pass": ":green-badge[Passed]",
+    "fail": ":orange-badge[Failed]",
+    "skip": ":gray-badge[Skipped]",
+}
 STATE = st.session_state
 for name in ("results", "files", "receipts", "reviews", "approved", "replayed"):
     STATE.setdefault(name, set() if name in ("approved", "replayed") else {})
@@ -154,10 +159,10 @@ def current(key: str) -> Result:
 
 def status_label(key: str, result: Result) -> str:
     if key in STATE.approved:
-        return "✅ Approved by reviewer"
+        return "Approved by reviewer"
     if result.review.status != "approved":
-        return "⚠️ Needs review"
-    return "✅ Corrected, checks pass" if key in STATE.receipts else "✅ Auto-approved"
+        return "Needs review"
+    return "Corrected, checks pass" if key in STATE.receipts else "Auto-approved"
 
 
 def summary(keys: list[str]) -> None:
@@ -203,8 +208,7 @@ def review_panel(key: str) -> None:
         else:
             st.warning(f"{len(review.failed)} check(s) failed: review the flagged fields.")
         for check in review.checks:
-            icon = {"pass": "✅", "fail": "⚠️", "skip": "➖"}[check.status]
-            st.markdown(f"{icon} **{check.name}**: {check.detail}")
+            st.markdown(f"{CHECK_BADGES[check.status]} **{check.name}**: {check.detail}")
         if key in STATE.replayed:
             st.caption(
                 f"Read by {result.model} in {result.seconds:.1f} s, saved from an earlier run and "
@@ -223,14 +227,16 @@ def review_panel(key: str) -> None:
                 )
             columns = st.columns(5)
             for index, (field, title) in enumerate(AMOUNTS.items()):
-                label = f"⚠️ {title}" if field in flagged else title
+                label = f"{title} (check)" if field in flagged else title
                 values[field] = columns[index % 5].text_input(
                     label, getattr(receipt, field) or "", key=f"{field}-{widget}"
                 )
             rows = pd.DataFrame(
                 [
                     {
-                        "check": "⚠️" if any(f.startswith(f"items[{i}]") for f in flagged) else "",
+                        "check": "Check"
+                        if any(f.startswith(f"items[{i}]") for f in flagged)
+                        else "",
                         **{column: getattr(item, column) or "" for column in ITEM_COLUMNS},
                         "add_ons": ", ".join(sub.name for sub in item.sub_items),
                     }
@@ -346,7 +352,7 @@ PERCENT_COLUMNS = {
 }  # fmt: skip
 
 
-st.title("🧾 InvoiceIQ")
+st.title("InvoiceIQ")
 st.caption(
     "Receipts and invoices in, validated structured data out. Every result is checked against the "
     "document's own arithmetic and against local OCR, and anything that does not add up is "

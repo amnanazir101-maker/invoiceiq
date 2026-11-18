@@ -36,7 +36,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-app = ["streamlit>=1.40", "altair>=5"]
+app = ["streamlit>=1.46", "altair>=5"]
 donut = ["torch>=2.2", "transformers>=4.40", "sentencepiece>=0.2", "protobuf>=4"]
 dev = ["pytest>=8", "httpx>=0.27", "ruff==0.17.2"]  # ruff pinned so CI formats exactly like local runs
 docs = ["vl-convert-python>=1.6"]  # renders docs/benchmark.png (scripts/benchmark_figure.py)
